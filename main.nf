@@ -20,14 +20,14 @@ process get_organism_paths {
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
     
     input:
-        path(raw_taxid_name)
+        tuple path(raw_taxid_name), path(script_path)
 
     output:
         path('taxid_name_dirname.csv')
     
     script:
     """
-    organism_name.py ${raw_taxid_name} taxid_name_dirname.csv
+    python ${script_path} ${raw_taxid_name} taxid_name_dirname.csv
     """
 }
 
@@ -262,8 +262,9 @@ workflow {
     release_file = Channel.fromPath('releases.txt')
     so_model = Channel.fromPath('so_model.emb')
     rf_model = Channel.fromPath('rf_model.onnx')
+    org_name_script = Channel.fromPath("utils/organisom_name.py")
 
-    taxid_name_dirname = taxa_query | fetch_ensembl_prefixes | get_organism_paths 
+    taxid_name_dirname = taxa_query | fetch_ensembl_prefixes.combine(org_name_script) | get_organism_paths 
     releases = release_file | splitText | map { it.trim() } | filter { it != "" }  
     releases_list = releases.collect().map { it.sort { a, b -> a as Integer <=> b as Integer } }
 
