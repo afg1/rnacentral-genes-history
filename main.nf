@@ -258,7 +258,7 @@ process upload_metadata {
 
 
 workflow {
-    taxa_query = Channel.fromPath('files/get_taxids.sql')
+    taxa_query = Channel.fromPath('sql/get_taxids.sql')
     release_file = Channel.fromPath('releases.txt')
     so_model = Channel.fromPath('so_model.emb')
     rf_model = Channel.fromPath('rf_model.onnx')
