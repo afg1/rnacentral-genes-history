@@ -294,13 +294,13 @@ workflow {
     
     genes_collected = genes
         .map { meta, json_file -> 
-            [taxid, json_file]
+            [meta.taxid, json_file]
         }
         .groupTuple()
     
     inactive_collected = inactive_ids
         .map { meta, inactive_file ->
-            [taxid, inactive_file]
+            [meta.taxid, inactive_file]
         }
         .groupTuple()
 
