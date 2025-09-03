@@ -51,7 +51,7 @@ process fetch_inactive_ids {
 }
 
 process copy_gff {
-    tag "${meta.release}: ${meta.org_name} GFF copy"
+    tag "Release ${meta.release}: ${meta.org_name} GFF copy"
     queue 'datamover'
     errorStrategy 'ignore'
 
@@ -85,7 +85,7 @@ process convert_gff_to_parquet {
 }
 
 process preprocess_transcripts {
-    tag "${meta.release}: ${meta.org_name} preprocessing"
+    tag "Release ${meta.release}: ${meta.org_name} preprocessing"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
 
     input:
@@ -106,7 +106,7 @@ process preprocess_transcripts {
 }
 
 process classify_pairs {
-    tag "${meta.release}: ${meta.org_name} classification"
+    tag "Release ${meta.release}: ${meta.org_name} classification"
 
     input:
         tuple val(meta), path(transcripts), path(features), path(rf_model)
