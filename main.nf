@@ -59,7 +59,7 @@ process copy_gff {
         tuple val(meta), val(dummy)
 
     output:
-        tuple val(meta), path('*.gff')
+        tuple val(meta), path('*.gff3')
 
     script:
     """
