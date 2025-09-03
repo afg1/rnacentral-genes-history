@@ -264,7 +264,7 @@ workflow {
     rf_model = Channel.fromPath('rf_model.onnx')
     org_name_script = Channel.fromPath("utils/organism_name.py")
 
-    taxid_name_dirname = taxa_query | fetch_ensembl_prefixes | combine(org_name_script) | get_organism_paths | splitCsv(header: true) | map { row -> [row.taxid, row.org_name, row.dirname] }
+    taxid_name_dirname = taxa_query | fetch_ensembl_prefixes | combine(org_name_script) | get_organism_paths | splitCsv(header: true) | map { row -> [row.taxid, row.org_name, row.transformed_name] }
     releases = release_file | splitText | map { it.trim() } | filter { it != "" }  
     releases_list = releases.collect().map { it.sort { a, b -> a as Integer <=> b as Integer } }
 
