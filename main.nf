@@ -262,7 +262,7 @@ workflow {
     release_file = Channel.fromPath('releases.txt')
     so_model = Channel.fromPath('so_model.emb')
     rf_model = Channel.fromPath('rf_model.onnx')
-    org_name_script = Channel.fromPath("utils/organisom_name.py")
+    org_name_script = Channel.fromPath("utils/organism_name.py")
 
     taxid_name_dirname = taxa_query | fetch_ensembl_prefixes | combine(org_name_script) | get_organism_paths 
     releases = release_file | splitText | map { it.trim() } | filter { it != "" }  
