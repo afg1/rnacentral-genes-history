@@ -286,7 +286,7 @@ workflow {
 
     transcripts = combo | copy_gff | convert_gff_to_parquet 
 
-    features = preprocess_transcripts(transcripts, so_model) 
+    features = preprocess_transcripts(transcripts.combine(so_model) )
 
     genes = classify_pairs(transcripts.join(features).combine(rf_model))
     
