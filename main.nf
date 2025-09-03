@@ -53,6 +53,7 @@ process fetch_inactive_ids {
 process copy_gff {
     tag "${meta.release}: ${meta.org_name} GFF copy"
     queue 'datamover'
+    errorStrategy 'ignore'
 
     input:
         tuple val(meta), val(dummy)
@@ -62,7 +63,7 @@ process copy_gff {
 
     script:
     """
-    cp /nfs/ftp/public/databases/RNAcentral/releases/${meta.release}.0/genome_coordinates/gff3/${meta.dirname}.gff3.gz .
+    cp /nfs/ftp/public/databases/RNAcentral/releases/${meta.release}.0/genome_coordinates/gff3/${meta.dirname}.*.gff3.gz .
     gzip -d ${meta.dirname}.gff3.gz
     """
 }
