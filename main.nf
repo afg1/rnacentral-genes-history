@@ -74,7 +74,7 @@ process convert_gff_to_parquet {
     tag "${meta.release}: ${meta.org_name} GFF conv"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
     memory { 8.GB * task.attempt }
-    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'ignore' }
     maxForks 40
     input:
         tuple val(meta), path(input_gff)
