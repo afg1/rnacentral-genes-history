@@ -32,22 +32,22 @@ process get_organism_paths {
 }
 
 process fetch_inactive_ids {
-    tag "${meta.release}: ${meta.org_name} inactive ids copy"
+    tag "${release}: inactive ids copy"
     queue 'datamover'
     memory { 4.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
     input:
-        tuple val(meta), val(dummy)
+        tuple val(release), val(dummy)
     
     output:
-        tuple val(meta), path("inactive_ids_release_${meta.release}")
+        tuple val(release), path("inactive_ids_release_${release}")
     
     script:
     """
-    cp /nfs/ftp/public/databases/RNAcentral/releases/${meta.release}.0/sequences/rnacentral_inactive.fasta.gz .
+    cp /nfs/ftp/public/databases/RNAcentral/releases/${release}.0/sequences/rnacentral_inactive.fasta.gz .
     gzip -d rnacentral_inactive.fasta.gz
-    grep -oE 'URS[0-9A-Z]+' rnacentral_inactive.fasta > inactive_ids_release_${meta.release}
+    grep -oE 'URS[0-9A-Z]+' rnacentral_inactive.fasta > inactive_ids_release_${release}
     rm rnacentral_inactive.fasta
     """
 }
@@ -301,7 +301,12 @@ workflow {
             [meta, []]
         }
 
-    inactive_ids = combo | fetch_inactive_ids
+    meta_by_release = combo
+        .map { meta, dummy -> [meta.release, meta] }
+        .groupTuple()  // Groups all taxa for each release
+
+    inactive_ids = releases.map { release -> [release, []] }  // Convert to [release, dummy] structure
+    | fetch_inactive_ids
 
     transcripts = combo | copy_gff | convert_gff_to_parquet 
 
@@ -315,10 +320,16 @@ workflow {
         }
         .groupTuple()
     
-    inactive_collected = inactive_ids
-        .map { meta, inactive_file ->
-            [meta.taxid, inactive_file]
-        }
+    inactive_with_meta = inactive_ids
+    .join(meta_by_release)  // Join on release number
+    .flatMap { release, inactive_file, meta_list ->
+        // Create one entry per taxon for this release
+        meta_list.collect { meta -> [meta, inactive_file] }
+    }
+
+
+    inactive_collected = inactive_with_meta
+        .map { meta, inactive_file -> [meta.taxid, inactive_file] }
         .groupTuple()
 
     combined_for_merge = genes_collected.join(inactive_collected).combine(releases_list)
