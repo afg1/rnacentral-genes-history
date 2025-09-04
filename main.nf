@@ -310,8 +310,8 @@ workflow {
 
     gene_metadata = merged_genes | calculate_metadata
 
-    genes_done = merged_genes | upload_genes
+    // genes_done = merged_genes | upload_genes
 
-    metadata_done = gene_metadata | upload_metadata
+    // metadata_done = gene_metadata | upload_metadata
 
 }
