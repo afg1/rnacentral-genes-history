@@ -34,7 +34,7 @@ process get_organism_paths {
 process fetch_inactive_ids {
     tag "${meta.release}: ${meta.org_name} inactive ids copy"
     queue 'datamover'
-    memory { 4 GB * task.attempt }
+    memory { 4.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
     input:
@@ -73,7 +73,7 @@ process copy_gff {
 process convert_gff_to_parquet {
     tag "${meta.release}: ${meta.org_name} GFF conv"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    memory { 8 GB * task.attempt }
+    memory { 8.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
     input:
         tuple val(meta), path(input_gff)
@@ -90,7 +90,7 @@ process convert_gff_to_parquet {
 process preprocess_transcripts {
     tag "Release ${meta.release}: ${meta.org_name} preprocessing"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    memory { 32 GB * task.attempt }
+    memory { 32.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
     input:
@@ -113,7 +113,7 @@ process preprocess_transcripts {
 process classify_pairs {
     tag "Release ${meta.release}: ${meta.org_name} classification"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    memory { 32 GB * task.attempt }
+    memory { 32.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
     cpus 4
 
@@ -140,7 +140,7 @@ process classify_pairs {
 process forward_merge {
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
     tag "Forward_merge ${taxid}"
-    memory { 4 GB * task.attempt }
+    memory { 4.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
     cpus 4
 
@@ -224,7 +224,7 @@ process forward_merge {
 process calculate_metadata {
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
     tag "${taxid} metadata calculation"
-    memory { 4 GB * task.attempt }
+    memory { 4.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
     cpus 4
 
@@ -242,7 +242,7 @@ process calculate_metadata {
 
 process upload_genes {
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    tag "${taxid} metadata calculation"
+    tag "${taxid} gene upload"
     maxForks 1
 
     input:
@@ -259,7 +259,7 @@ process upload_genes {
 
 process upload_metadata {
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    tag "${taxid} metadata calculation"
+    tag "${taxid} metadata upload"
     maxForks 1
 
     input:
