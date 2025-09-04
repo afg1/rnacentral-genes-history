@@ -34,7 +34,8 @@ process get_organism_paths {
 process fetch_inactive_ids {
     tag "${meta.release}: ${meta.org_name} inactive ids copy"
     queue 'datamover'
-    memory '4 GB'
+    memory { 4 GB * task.attempt }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
     input:
         tuple val(meta), val(dummy)
@@ -72,7 +73,8 @@ process copy_gff {
 process convert_gff_to_parquet {
     tag "${meta.release}: ${meta.org_name} GFF conv"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    memory '8 GB'
+    memory { 8 GB * task.attempt }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
     input:
         tuple val(meta), path(input_gff)
     
