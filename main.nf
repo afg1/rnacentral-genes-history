@@ -297,7 +297,7 @@ workflow {
     so_model = Channel.fromPath('/hps/nobackup/agb/rnacentral/rnacentral-genes-history/so_model.emb')
     rf_model = Channel.fromPath('/hps/nobackup/agb/rnacentral/rnacentral-genes-history/rf_model.onnx')
     org_name_script = Channel.fromPath("/hps/nobackup/agb/rnacentral/rnacentral-genes-history/utils/organism_name.py")
-    regions_query = Channel.fromPath('/hps/nobackup/agb/rnacentral/rnacentral-genes-history/sql/get_regions.sql')
+    regions_query = Channel.fromPath('/hps/nobackup/agb/rnacentral/rnacentral-genes-history/sql/dump_regions.sql')
 
     taxid_name_dirname = taxa_query | fetch_ensembl_prefixes | combine(org_name_script) | get_organism_paths | splitCsv(header: true) | map { row -> [row.taxid, row.organism_name, row.transformed_name] }
     releases = release_file | splitText | map { it.trim() } | filter { it != "" }  
