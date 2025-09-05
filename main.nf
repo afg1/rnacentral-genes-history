@@ -16,6 +16,7 @@ process fetch_ensembl_prefixes {
 }
 
 process fetch_regions_data {
+    maxForks 50
     input:
         tuple val(taxid), path(regions_query)
     output:
