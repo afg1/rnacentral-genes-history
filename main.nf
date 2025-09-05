@@ -15,6 +15,17 @@ process fetch_ensembl_prefixes {
     """
 }
 
+process fetch_regions_data {
+    input:
+        tuple val(taxid), path(regions_query)
+    output:
+        path('regions.csv')
+    script:
+    """
+    psql -v ON_ERROR_STOP=1 -v taxid=${taxid} -f ${regions_query} "$PGDATABASE" > regions.csv
+    """
+}
+
 process get_organism_paths {
 
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
