@@ -117,6 +117,7 @@ process classify_pairs {
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
     memory { 32.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+    maxRetries 4
     cpus 4
 
 
