@@ -19,7 +19,7 @@ process fetch_regions_data {
     input:
         tuple val(taxid), path(regions_query)
     output:
-        path('regions.csv')
+        tuple val(taxid), path('regions.csv')
     script:
     """
     psql -v ON_ERROR_STOP=1 -v taxid=${taxid} -f ${regions_query} "$PGDATABASE" > regions.csv
@@ -88,14 +88,14 @@ process convert_gff_to_parquet {
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'ignore' }
     maxForks 40
     input:
-        tuple val(meta), path(input_gff)
+        tuple val(meta), path(input_gff), path(regions_file)
     
     output:
         tuple val(meta), path('*.parquet')
 
     script:
     """
-    rnac genes utils convert --gff_file ${input_gff} --taxid ${meta.taxid}
+    rnac genes utils convert --gff_file ${input_gff} --taxid ${meta.taxid} --regions_file ${regions_file}
     """
 }
 
@@ -107,7 +107,7 @@ process preprocess_transcripts {
     maxRetries 4
 
     input:
-        tuple val(meta), path(input_parquet), path(so_model)
+        tuple val(meta), path(input_parquet), path(so_model), path(regions_file)
     
     output:
         tuple val(meta), path("${meta.dirname}_features.parquet")
@@ -117,6 +117,7 @@ process preprocess_transcripts {
     rnac genes infer preprocess \
     --transcripts_file ${input_parquet} \
     --so_model_path ${so_model} \
+    --regions_file ${regions_file} \
     --output ${meta.dirname}_features.parquet \
     --no-parallel
     """
@@ -295,10 +296,22 @@ workflow {
     so_model = Channel.fromPath('so_model.emb')
     rf_model = Channel.fromPath('rf_model.onnx')
     org_name_script = Channel.fromPath("utils/organism_name.py")
+    regions_query = Channel.fromPath('sql/get_regions.sql')
 
     taxid_name_dirname = taxa_query | fetch_ensembl_prefixes | combine(org_name_script) | get_organism_paths | splitCsv(header: true) | map { row -> [row.taxid, row.organism_name, row.transformed_name] }
     releases = release_file | splitText | map { it.trim() } | filter { it != "" }  
     releases_list = releases.collect().map { it.sort { a, b -> a as Integer <=> b as Integer } }
+    unique_taxids = taxid_name_dirname
+        .map { taxid, org_name, dirname -> taxid }
+        .unique()
+    
+    // Fetch regions data for each taxid
+    regions_data = unique_taxids
+        .combine(regions_query)
+        .map { taxid, query_file -> [taxid, query_file] }
+        | fetch_regions_data
+        .map { taxid, regions_file -> [taxid, regions_file] }  // Make it [taxid, file] for joining
+
 
     combo = taxid_name_dirname.combine(releases).map { taxid, org_name, dirname, release ->
             // Create a meta map containing ALL the metadata we want to track
@@ -322,11 +335,24 @@ workflow {
     inactive_ids = releases.map { release -> [release, []] }  // Convert to [release, dummy] structure
     | fetch_inactive_ids
 
-    transcripts = combo | copy_gff | convert_gff_to_parquet 
+    transcripts_with_regions = combo 
+        | copy_gff
+        .map { meta, gff_file -> [meta.taxid, meta, gff_file] }  // Add taxid as key
+        .join(regions_data)  // Join on taxid
+        .map { taxid, meta, gff_file, regions_file -> [meta, gff_file, regions_file] }
+        | convert_gff_to_parquet 
 
-    features = preprocess_transcripts(transcripts.combine(so_model) )
+    // For preprocess_transcripts, combine with so_model and regions
+    transcripts_for_preprocessing = transcripts_with_regions
+        .map { meta, parquet_file -> [meta.taxid, meta, parquet_file] }
+        .join(regions_data)  // Join regions again
+        .map { taxid, meta, parquet_file, regions_file -> [meta, parquet_file, regions_file] }
+        .combine(so_model)
+        .map { meta, parquet_file, regions_file, so_model_file -> [meta, parquet_file, so_model_file, regions_file] }
 
-    genes = classify_pairs(transcripts.join(features).combine(rf_model))
+    features = preprocess_transcripts(transcripts_for_preprocessing)
+
+    genes = classify_pairs(transcripts_with_regions.join(features).combine(rf_model))
     
     genes_collected = genes
         .map { meta, json_file -> 
