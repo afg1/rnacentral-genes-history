@@ -310,7 +310,6 @@ workflow {
         .combine(regions_query)
         .map { taxid, query_file -> [taxid, query_file] }
         | fetch_regions_data
-        .map { taxid, regions_file -> [taxid, regions_file] }  // Make it [taxid, file] for joining
 
 
     combo = taxid_name_dirname.combine(releases).map { taxid, org_name, dirname, release ->
