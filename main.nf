@@ -334,12 +334,14 @@ workflow {
     inactive_ids = releases.map { release -> [release, []] }  // Convert to [release, dummy] structure
     | fetch_inactive_ids
 
-    transcripts_with_regions = combo 
-        | copy_gff
-        .map { meta, gff_file -> [meta.taxid, meta, gff_file] }  // Add taxid as key
-        .join(regions_data)  // Join on taxid
+    gff_files = combo | copy_gff
+    gff_with_regions = gff_files
+        .map { meta, gff_file -> [meta.taxid, meta, gff_file] }
+        .join(regions_data)
         .map { taxid, meta, gff_file, regions_file -> [meta, gff_file, regions_file] }
-        | convert_gff_to_parquet 
+
+    transcripts_with_regions = gff_with_regions | convert_gff_to_parquet
+
 
     // For preprocess_transcripts, combine with so_model and regions
     transcripts_for_preprocessing = transcripts_with_regions
