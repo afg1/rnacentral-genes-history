@@ -171,7 +171,7 @@ process forward_merge {
     # Create associative arrays for genes and inactive files by release
     declare -A genes_files
     declare -A inactive_files
-    
+
     # Parse genes files: genes_TAXID_RELEASE.json
     for file in ${genes_files}; do
         if [[ \$file =~ genes_${taxid}_([0-9]+)\\.json ]]; then
@@ -179,7 +179,7 @@ process forward_merge {
             genes_files[\$release]=\$file
         fi
     done
-    
+
     # Parse inactive files: inactive_ids_release_RELEASE
     for file in ${inactive_files}; do
         if [[ \$file =~ inactive_ids_release_([0-9]+) ]]; then
@@ -187,32 +187,52 @@ process forward_merge {
             inactive_files[\$release]=\$file
         fi
     done
-    
+
     # Use the provided releases list (already sorted)
     releases=(${releases.join(' ')})
     echo "Processing releases in order: \${releases[*]}"
-    
-    # Debug: show what files we found
+
+    # Find the first available release for this taxon
+    first_available_release=""
     for release in "\${releases[@]}"; do
-        echo "Release \$release: genes=\${genes_files[\$release]}, inactive=\${inactive_files[\$release]}"
+        if [[ -n "\${genes_files[\$release]}" && -n "\${inactive_files[\$release]}" ]]; then
+            first_available_release=\$release
+            echo "First available release for taxon ${taxid}: \$first_available_release"
+            break
+        fi
     done
-    
-    # Start with the first release
-    prev_file="\${genes_files[\${releases[0]}]}"
-    prev_release="\${releases[0]}"
-    
+
+    # Check if we found any files at all
+    if [[ -z "\$first_available_release" ]]; then
+        echo "ERROR: No genes or inactive files found for taxon ${taxid} in any release"
+        exit 1
+    fi
+
+    # Start with the first available release
+    prev_file="\${genes_files[\$first_available_release]}"
+    prev_release="\$first_available_release"
+
+    echo "Starting with release \$first_available_release"
+
     # Loop through remaining releases and merge sequentially  
-    for i in "\${!releases[@]}"; do
-        if [ \$i -eq 0 ]; then
-            continue  # Skip first release
+    for release in "\${releases[@]}"; do
+        # Skip if this release is before or equal to our starting release
+        if [[ \$release -le \$first_available_release ]]; then
+            continue
         fi
         
-        curr_release="\${releases[\$i]}"
-        curr_file="\${genes_files[\$curr_release]}"
-        inactive_file="\${inactive_files[\$curr_release]}"
-        output_file="\${curr_release}_merged.json"
+        curr_file="\${genes_files[\$release]}"
+        inactive_file="\${inactive_files[\$release]}"
         
-        echo "Merging release \$prev_release + \$curr_release"
+        # Skip this release if files are missing
+        if [[ -z "\$curr_file" || -z "\$inactive_file" ]]; then
+            echo "Skipping release \$release: missing genes_file='\$curr_file' or inactive_file='\$inactive_file'"
+            continue
+        fi
+        
+        output_file="\${release}_merged.json"
+        
+        echo "Merging release \$prev_release + \$release"
         echo "  Previous: \$prev_file"
         echo "  Current: \$curr_file"
         echo "  Inactive: \$inactive_file"
@@ -224,13 +244,13 @@ process forward_merge {
             --output "\$output_file" \\
             --inactive_ids "\$inactive_file" \\
             --prev_release_number \$prev_release \\
-            --next_release_number \$curr_release
+            --next_release_number \$release
         
         # Update for next iteration
         prev_file="\$output_file"
-        prev_release=\$curr_release
+        prev_release=\$release
     done
-    
+
     # Copy final result to expected output name
     cp "\$prev_file" "final_merged_${taxid}.json"
     """
