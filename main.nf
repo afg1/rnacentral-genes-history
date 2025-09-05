@@ -96,7 +96,7 @@ process convert_gff_to_parquet {
 
     script:
     """
-    rnac genes utils convert --gff_file ${input_gff} --taxid ${meta.taxid} --regions_file ${regions_file}
+    rnac genes utils convert --gff_file ${input_gff} --taxid ${meta.taxid} --regions_data ${regions_file}
     """
 }
 
@@ -118,7 +118,7 @@ process preprocess_transcripts {
     rnac genes infer preprocess \
     --transcripts_file ${input_parquet} \
     --so_model_path ${so_model} \
-    --regions_file ${regions_file} \
+    --regions_data ${regions_file} \
     --output ${meta.dirname}_features.parquet \
     --no-parallel
     """
