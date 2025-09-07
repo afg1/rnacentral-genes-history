@@ -108,7 +108,7 @@ process preprocess_transcripts {
     maxRetries 4
 
     input:
-        tuple val(meta), path(input_parquet), path(so_model), path(regions_file)
+        tuple val(meta), path(input_parquet), path(regions_file),  path(so_model)
     
     output:
         tuple val(meta), path("${meta.dirname}_features.parquet")
