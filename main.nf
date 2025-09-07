@@ -135,7 +135,7 @@ process classify_pairs {
 
 
     input:
-        tuple val(meta), path(transcripts), path(features), path(rf_model)
+        tuple val(meta), path(transcripts), path(regions), path(features), path(rf_model)
 
     output:
         tuple val(meta), path("*.json")
