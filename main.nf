@@ -92,7 +92,7 @@ process convert_gff_to_parquet {
         tuple val(meta), path(input_gff), path(regions_file)
     
     output:
-        tuple val(meta), path('*.parquet')
+        tuple val(meta), path('*.parquet'), path(regions_file)
 
     script:
     """
@@ -364,14 +364,7 @@ workflow {
 
     transcripts_with_regions = gff_with_regions | convert_gff_to_parquet
 
-
-    // For preprocess_transcripts, combine with so_model
-    transcripts_for_preprocessing = transcripts_with_regions
-    .combine(so_model)
-    .map { meta, parquet_file, regions_file, so_model_file -> 
-        [meta, parquet_file, so_model_file, regions_file] 
-    }
-    features = preprocess_transcripts(transcripts_for_preprocessing)
+    features = preprocess_transcripts(transcripts_with_regions.combine(so_model))
 
     genes = classify_pairs(transcripts_with_regions.join(features).combine(rf_model))
     
