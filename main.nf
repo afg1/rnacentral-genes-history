@@ -358,7 +358,7 @@ workflow {
     gff_files = combo | copy_gff
     gff_with_regions = gff_files
         .map { meta, gff_file -> [meta.taxid, meta, gff_file] }
-        .join(regions_data)
+        .combine(regions_data, by: 0)
         .map { taxid, meta, gff_file, regions_file -> [meta, gff_file, regions_file] }
 
     transcripts_with_regions = gff_with_regions | convert_gff_to_parquet
