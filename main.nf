@@ -365,14 +365,12 @@ workflow {
     transcripts_with_regions = gff_with_regions | convert_gff_to_parquet
 
 
-    // For preprocess_transcripts, combine with so_model and regions
+    // For preprocess_transcripts, combine with so_model
     transcripts_for_preprocessing = transcripts_with_regions
-        .map { meta, parquet_file -> [meta.taxid, meta, parquet_file] }
-        .join(regions_data)  // Join regions again
-        .map { taxid, meta, parquet_file, regions_file -> [meta, parquet_file, regions_file] }
-        .combine(so_model)
-        .map { meta, parquet_file, regions_file, so_model_file -> [meta, parquet_file, so_model_file, regions_file] }
-
+    .combine(so_model)
+    .map { meta, parquet_file, regions_file, so_model_file -> 
+        [meta, parquet_file, so_model_file, regions_file] 
+    }
     features = preprocess_transcripts(transcripts_for_preprocessing)
 
     genes = classify_pairs(transcripts_with_regions.join(features).combine(rf_model))
