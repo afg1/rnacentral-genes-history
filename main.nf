@@ -142,6 +142,8 @@ process classify_pairs {
 
     script:
     """
+    export OMP_NUM_THREADS=4
+    
     rnac genes infer classify \
     --transcripts_file ${transcripts} \
     --features_file ${features} \
