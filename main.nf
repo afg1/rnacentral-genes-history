@@ -103,9 +103,9 @@ process convert_gff_to_parquet {
 process preprocess_transcripts {
     tag "Release ${meta.release}: ${meta.org_name} preprocessing"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    memory { 32.GB * task.attempt }
+    memory { 256.GB * task.attempt }
     errorStrategy 'retry'
-    maxRetries 4
+    maxRetries 2
 
     input:
         tuple val(meta), path(input_parquet), path(regions_file),  path(so_model)
@@ -130,7 +130,7 @@ process classify_pairs {
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
     memory { 32.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
-    maxRetries 4
+    maxRetries 6
     cpus 4
 
 
@@ -143,7 +143,7 @@ process classify_pairs {
     script:
     """
     export OMP_NUM_THREADS=4
-    
+
     rnac genes infer classify \
     --transcripts_file ${transcripts} \
     --features_file ${features} \
