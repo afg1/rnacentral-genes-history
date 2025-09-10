@@ -103,9 +103,9 @@ process convert_gff_to_parquet {
 process preprocess_transcripts {
     tag "Release ${meta.release}: ${meta.org_name} preprocessing"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    memory { 1.MB * task.attempt }
-    errorStrategy 'ignore'
-    maxRetries 2
+    memory { 64.GB * task.attempt }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'ignore' }
+    maxRetries 4
 
     input:
         tuple val(meta), path(input_parquet), path(regions_file),  path(so_model)
