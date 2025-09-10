@@ -181,6 +181,7 @@ process forward_merge {
             genes_files[\$release]=\$file
         fi
     done
+    echo "${genes_files[*]}"
 
     # Parse inactive files: inactive_ids_release_RELEASE
     for file in ${inactive_files}; do
@@ -189,6 +190,8 @@ process forward_merge {
             inactive_files[\$release]=\$file
         fi
     done
+
+    echo "${inactive_files[*]}"
 
     # Use the provided releases list (already sorted)
     releases=(${releases.join(' ')})
@@ -336,7 +339,7 @@ workflow {
         | fetch_regions_data
 
 
-    combo = taxid_name_dirname.combine(releases).map { taxid, org_name, dirname, release ->
+    combo = taxid_name_dirname.combine(releases_list).map { taxid, org_name, dirname, release ->
             // Create a meta map containing ALL the metadata we want to track
             def meta = [
                 taxid: taxid,
