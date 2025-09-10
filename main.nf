@@ -128,9 +128,9 @@ process preprocess_transcripts {
 process classify_pairs {
     tag "Release ${meta.release}: ${meta.org_name} classification"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    memory { 32.GB * task.attempt }
-    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
-    maxRetries 6
+    memory { 1.GB * task.attempt }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'ignore' }
+    maxRetries 1
     cpus 4
 
 
