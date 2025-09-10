@@ -159,7 +159,7 @@ process forward_merge {
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
     tag "Forward_merge ${taxid}"
     memory { 4.GB * task.attempt }
-    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'ignore' }
     cpus 4
 
     input:
@@ -263,7 +263,7 @@ process calculate_metadata {
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
     tag "${taxid} metadata calculation"
     memory { 4.GB * task.attempt }
-    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'ignore' }
     cpus 4
     maxForks 10
 
