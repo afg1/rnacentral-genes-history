@@ -103,8 +103,8 @@ process convert_gff_to_parquet {
 process preprocess_transcripts {
     tag "Release ${meta.release}: ${meta.org_name} preprocessing"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
-    memory { 256.GB * task.attempt }
-    errorStrategy 'retry'
+    memory { 1.MB * task.attempt }
+    errorStrategy 'ignore'
     maxRetries 2
 
     input:
