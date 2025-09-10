@@ -324,7 +324,7 @@ workflow {
 
     taxid_name_dirname = taxa_query | fetch_ensembl_prefixes | combine(org_name_script) | get_organism_paths | splitCsv(header: true) | map { row -> [row.taxid, row.organism_name, row.transformed_name] }
     releases = release_file | splitText | map { it.trim() } | filter { it != "" }  
-    releases_list = releases.collect().map { it.sort { a, b -> a as Integer <=> b as Integer } }
+    releases_list = releases.toSortedList { a, b -> a as Integer <=> b as Integer }
     unique_taxids = taxid_name_dirname
         .map { taxid, org_name, dirname -> taxid }
         .unique()
