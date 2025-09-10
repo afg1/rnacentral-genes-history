@@ -129,7 +129,7 @@ process classify_pairs {
     tag "Release ${meta.release}: ${meta.org_name} classification"
     container 'oras://ghcr.io/rnacentral/rnacentral-import-pipeline:latest'
     memory { 1.GB * task.attempt }
-    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'ignore' }
+    errorStrategy 'ignore' //{ task.exitStatus in 137..140 ? 'retry' : 'terminate' }
     maxRetries 1
     cpus 4
 
