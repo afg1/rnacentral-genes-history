@@ -327,7 +327,8 @@ workflow {
 
     taxid_name_dirname = taxa_query | fetch_ensembl_prefixes | combine(org_name_script) | get_organism_paths | splitCsv(header: true) | map { row -> [row.taxid, row.organism_name, row.transformed_name] }
     releases = release_file | splitText | map { it.trim() } | filter { it != "" }  
-    releases_list = Channel.Value(releases.toSortedList { a, b -> a as Integer <=> b as Integer }.val)
+    all_releases = ["12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"]
+    releases_list = Channel.value(all_releases)
     unique_taxids = taxid_name_dirname
         .map { taxid, org_name, dirname -> taxid }
         .unique()
