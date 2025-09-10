@@ -181,7 +181,7 @@ process forward_merge {
             genes_files[\$release]=\$file
         fi
     done
-    echo "${genes_files[*]}"
+    echo "\${genes_files[*]}"
 
     # Parse inactive files: inactive_ids_release_RELEASE
     for file in ${inactive_files}; do
@@ -191,12 +191,12 @@ process forward_merge {
         fi
     done
 
-    echo "${inactive_files[*]}"
+    echo "\${inactive_files[*]}"
 
     # Use the provided releases list (already sorted)
     releases=(${releases.join(' ')})
     echo "Processing releases in order: \${releases[*]}"
-
+    
     # Find the first available release for this taxon
     first_available_release=""
     for release in "\${releases[@]}"; do
@@ -327,7 +327,7 @@ workflow {
 
     taxid_name_dirname = taxa_query | fetch_ensembl_prefixes | combine(org_name_script) | get_organism_paths | splitCsv(header: true) | map { row -> [row.taxid, row.organism_name, row.transformed_name] }
     releases = release_file | splitText | map { it.trim() } | filter { it != "" }  
-    releases_list = releases.toSortedList { a, b -> a as Integer <=> b as Integer }
+    releases_list = Channel.Value(releases.toSortedList { a, b -> a as Integer <=> b as Integer }.val)
     unique_taxids = taxid_name_dirname
         .map { taxid, org_name, dirname -> taxid }
         .unique()
@@ -339,7 +339,7 @@ workflow {
         | fetch_regions_data
 
 
-    combo = taxid_name_dirname.combine(releases_list).map { taxid, org_name, dirname, release ->
+    combo = taxid_name_dirname.combine(releases).map { taxid, org_name, dirname, release ->
             // Create a meta map containing ALL the metadata we want to track
             def meta = [
                 taxid: taxid,
