@@ -392,7 +392,13 @@ workflow {
         .map { meta, inactive_file -> [meta.taxid, inactive_file] }
         .groupTuple()
 
-    combined_for_merge = genes_collected.join(inactive_collected).combine(releases_list)
+    combined_for_merge = genes_collected
+        .join(inactive_collected)
+        .combine(releases_list)
+        .map { taxid, genes_files_list, inactive_files_list, releases ->
+        // Flatten the lists - groupTuple wraps files in lists
+            [taxid, genes_files_list.flatten(), inactive_files_list.flatten(), releases]
+        }
 
     merged_genes = combined_for_merge | forward_merge
 
