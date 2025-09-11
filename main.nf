@@ -163,7 +163,7 @@ process forward_merge {
     cpus 4
 
     input:
-        tuple val(taxid), path(genes_files), path(inactive_files), val(releases)
+        tuple val(taxid), path(genes_files), path(inactive_files)
 
     output:
         tuple val(taxid), path("final_merged_${taxid}.json")
@@ -193,8 +193,8 @@ process forward_merge {
 
     echo "\${inactive_files[*]}"
 
-    # Use the provided releases list (already sorted)
-    releases=(${releases.join(' ')})
+    # Hardcoded releases list (already sorted)
+    releases=(12 13 14 15 16 17 18 19 20 21 22 23 24 25)
     echo "Processing releases in order: \${releases[*]}"
     
     # Find the first available release for this taxon
@@ -243,7 +243,7 @@ process forward_merge {
         echo "  Inactive: \$inactive_file"
         echo "  Output: \$output_file"
         
-        rnac genes merge \\
+        rnac genes utils merge \\
             --previous_genes "\$prev_file" \\
             --next_genes "\$curr_file" \\
             --output "\$output_file" \\
@@ -392,13 +392,7 @@ workflow {
         .map { meta, inactive_file -> [meta.taxid, inactive_file] }
         .groupTuple()
 
-    combined_for_merge = genes_collected
-        .join(inactive_collected)
-        .combine(releases_list)
-        .map { taxid, genes_files_list, inactive_files_list, releases ->
-        // Flatten the lists - groupTuple wraps files in lists
-            [taxid, genes_files_list.flatten(), inactive_files_list.flatten(), releases]
-        }
+    combined_for_merge = genes_collected.join(inactive_collected)
 
     merged_genes = combined_for_merge | forward_merge
 
