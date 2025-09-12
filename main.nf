@@ -268,7 +268,7 @@ process calculate_metadata {
     memory { 4.GB * task.attempt }
     errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'ignore' }
     cpus 4
-    maxForks 10
+    maxForks 1
 
     input:
         tuple val(taxid), path(merged_genes)
