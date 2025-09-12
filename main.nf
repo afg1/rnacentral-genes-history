@@ -200,7 +200,7 @@ process forward_merge {
     # Find the first available release for this taxon
     first_available_release=""
     for release in "\${releases[@]}"; do
-        if [[ -n "\${genes_files[\$release]}" && -n "\${inactive_files[\$release]}" ]]; then
+        if [[ -n "\${genes_files[\$release]:-}" && -n "\${inactive_files[\$release]:-}" ]]; then
             first_available_release=\$release
             echo "First available release for taxon ${taxid}: \$first_available_release"
             break
