@@ -291,7 +291,7 @@ process upload_genes {
         tuple val(taxid), path(merged_genes)
 
     output:
-        tuple val(taxid), val("DONE GENES")
+        tuple val(taxid), path(merged_genes)
 
     script:
     """
@@ -396,10 +396,6 @@ workflow {
 
     merged_genes = combined_for_merge | forward_merge
 
-    gene_metadata = merged_genes | calculate_metadata
-
-    genes_done = merged_genes | upload_genes
-
-    metadata_done = gene_metadata | upload_metadata
+    genes_done = merged_genes | upload_genes | calculate_metadata | upload_metadata
 
 }
